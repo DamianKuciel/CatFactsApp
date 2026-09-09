@@ -1,8 +1,8 @@
 # Cat Facts App
 
-> A robust .NET console appliication that fetches random cat facts from a public API and logs them to a local text file.
+> A robust .NET console application that fetches random cat facts from a public API and logs them to a local text file.
 
-This project is built to demonstrate modern C# development practices, focusing on clean architectire, resilience, and hight testability.
+This project is built to demonstrate modern C# development practices, focusing on clean architecture, resilience, and higth testability.
 
 ## About The Project
 
@@ -23,7 +23,7 @@ To get a local copy up and running follow these simple steps:
 	
 ## Configuration
 
-The application is highly configrable. You can modify the API endpoint or the output file name by editing the 'CatFactsApp/appsettings.json' file:
+The application is highly configurable. You can modify the API endpoint or the output file name by editing the 'CatFactsApp/appsettings.json' file:
 
 ```json
 {
@@ -37,6 +37,6 @@ The application is highly configrable. You can modify the API endpoint or the ou
 
 The solution includes a dedicated xUnit test project (CatFactsApp.Tests) that verifies the HTTP client behavior against valid and invalid data.
 
-*	Open your terminal in the root directiory.
+*	Open your terminal in the root directory.
 *	Run the test suite using the standard .NET CLI command: 'dotnet test'.
 * 	The test will automatically validate the client logic and provide a green pass status.
