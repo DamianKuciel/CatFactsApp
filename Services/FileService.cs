@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using CatFactsApp.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CatFactsApp.Services
 {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CatFactsApp.Configuration
+﻿namespace CatFactsApp.Configuration
 {
     public class AppOptions
     {

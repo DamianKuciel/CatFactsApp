@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 using CatFactsApp.Configuration;
 using CatFactsApp.Services;
-using System.Linq.Expressions;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>

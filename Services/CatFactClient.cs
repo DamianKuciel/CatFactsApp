@@ -1,8 +1,5 @@
 ﻿using System.Net.Http.Json;
 using CatFactsApp.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CatFactsApp.Services
 {
