@@ -11,7 +11,7 @@ namespace CatFactsApp.Tests
         [Fact]
         public async Task GetFactAsync_ReturnsValidResponse()
         {
-            var expectedFact = new CatFactResponse("Test cat fact", 13);
+            var expectedFact = new CatFactResponse("Baking chocolate is dangerous for cats.", 45);
             var handlerMock = new HttpMessageHandlerMock(expectedFact);
             var httpClient = new HttpClient(handlerMock) { BaseAddress = new Uri("https://catfact.ninja/") };
             var client = new CatFactClient(httpClient);
@@ -19,8 +19,19 @@ namespace CatFactsApp.Tests
             var result = await client.GetFactAsync();
 
             Assert.NotNull(result);
-            Assert.Equal("Test cat fact", result.Fact);
-            Assert.Equal(13, result.Length);
+            Assert.Equal("Baking chocolate is dangerous for cats.", result.Fact);
+            Assert.Equal(45, result.Length);
+        }
+
+        [Fact]
+        public async Task GetFactAsync_ReturnsNull_WhenApiResponseIsInvalid()
+        {
+            var handlerMock = new HttpMessageHandlerNullMock();
+            var httpClient = new HttpClient(handlerMock) { BaseAddress = new Uri("https://catfact.ninja/") };
+            var client = new CatFactClient(httpClient);
+
+            var result = await client.GetFactAsync();
+            Assert.Null(result);
         }
     }
 
@@ -38,7 +49,18 @@ namespace CatFactsApp.Tests
             };
             return Task.FromResult(httpResponse);
         }
-
-
     }
+
+    public class HttpMessageHandlerNullMock : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("null", System.Text.Encoding.UTF8, "application/json")
+            };
+            return Task.FromResult(httpResponse);
+        }
+    }
+
 }
