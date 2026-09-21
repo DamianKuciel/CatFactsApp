@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -33,11 +34,26 @@ var host = Host.CreateDefaultBuilder(args)
 
         services.AddTransient<IFileService, FileService>();
         services.AddTransient<ICatFactApplicationService, CatFactApplicationService>();
+
+        services.AddTransient<IFactStatisticsService, FactStatisticsService>();
     })
     .Build();
 
 using var scope = host.Services.CreateScope();
 var provider = scope.ServiceProvider;
+
+if (args.Contains("--stats"))
+{
+    var statsService = provider.GetRequiredService<IFactStatisticsService>();
+    var stats = await statsService.GetStatisticsAsync();
+
+    Console.WriteLine($"Total facts: {stats.TotalFacts}");
+    Console.WriteLine($"Average length: {stats.AverageLength:F2}");
+    Console.WriteLine($"Shortest fact: {stats.ShortestFactLength}");
+    Console.WriteLine($"Longest fact: {stats.LongestFactLength}");
+
+    return 0; 
+}
 
 var appService = provider.GetRequiredService<ICatFactApplicationService>();
 
@@ -50,5 +66,4 @@ Console.CancelKeyPress += (s, e) =>
 };
 
 var result = await appService.ExecuteAsync(cts.Token);
-
 return result.IsSuccess ? 0 : 1;
