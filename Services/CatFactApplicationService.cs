@@ -1,4 +1,9 @@
-﻿namespace CatFactsApp.Services
+﻿using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace CatFactsApp.Services
 {
     public class CatFactApplicationService : ICatFactApplicationService
     {
@@ -15,13 +20,21 @@
         {
             try
             {
-                Console.WriteLine("Fetching a random cat fact...");
+                var stopwatch = Stopwatch.StartNew();
                 var response = await _catClient.GetFactAsync(cancellationToken);
+                stopwatch.Stop();
 
                 if (response != null)
                 {
+                    Console.WriteLine("✓ Fact received");
+
                     await _fileService.SaveFactToFileAsync(response.Fact, cancellationToken);
-                    Console.WriteLine($"Cat fact saved to file: {response.Fact}");
+
+                    Console.WriteLine("✓ Fact saved");
+                    Console.WriteLine();
+                    Console.WriteLine($"Fact length: {response.Length} characters");
+                    Console.WriteLine($"Request duration: {stopwatch.ElapsedMilliseconds} ms");
+
                     return new FetchResult(true);
                 }
                 else
