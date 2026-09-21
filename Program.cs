@@ -54,6 +54,9 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"An error occurred: {ex.Message}");
+    return 1;
 }
+
+return 0;
 
 
