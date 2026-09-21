@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Polly;
 using CatFactsApp.Configuration;
 using CatFactsApp.Services;
 
@@ -9,57 +11,44 @@ var host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>
     {
         config.SetBasePath(AppContext.BaseDirectory);
-        config.AddJsonFile("appsettings.json", optional:false, reloadOnChange: true);
+        config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
     })
     .ConfigureServices((context, services) =>
-     {
-         var configuration = context.Configuration;
-         services.Configure<AppOptions>(configuration.GetSection("AppOptions"));
+    {
+        var configuration = context.Configuration;
 
-         var apiUrl = configuration["AppOptions:ApiUrl"] ?? "https://catfact.ninja/fact";
+        services.Configure<AppOptions>(configuration.GetSection("AppOptions"));
 
-         services.AddHttpClient<ICatFactClient, CatFactClient>(client =>
-         {
-             client.BaseAddress = new Uri(apiUrl);
-         })
-         .AddStandardResilienceHandler(options =>
-         {
-             options.Retry.MaxRetryAttempts = 3;
-             options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(15);
-         });
+        var apiUrl = configuration["AppOptions:ApiUrl"] ?? "https://catfact.ninja/fact";
 
-         services.AddTransient<IFileService, FileService>();
-     })
+        services.AddHttpClient<ICatFactClient, CatFactClient>(client =>
+        {
+            client.BaseAddress = new Uri(apiUrl);
+        })
+        .AddStandardResilienceHandler(options =>
+        {
+            options.Retry.MaxRetryAttempts = 3;
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(15);
+        });
+
+        services.AddTransient<IFileService, FileService>();
+        services.AddTransient<ICatFactApplicationService, CatFactApplicationService>();
+    })
     .Build();
 
 using var scope = host.Services.CreateScope();
-var services = scope.ServiceProvider;
+var provider = scope.ServiceProvider;
 
-try
+var appService = provider.GetRequiredService<ICatFactApplicationService>();
+
+using var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (s, e) =>
 {
-    var catClient = services.GetRequiredService<ICatFactClient>();
-    var fileService = services.GetRequiredService<IFileService>();
+    Console.WriteLine("\nAnulowanie operacji...");
+    e.Cancel = true;
+    cts.Cancel();
+};
 
-    Console.WriteLine("Fetching a random cat fact...");
-    var response = await catClient.GetFactAsync();
+var result = await appService.ExecuteAsync(cts.Token);
 
-    if (response != null)
-    {
-        await fileService.SaveFactToFileAsync(response.Fact);
-        Console.WriteLine($"Cat fact saved to file: {response.Fact}");
-    }
-    else
-    {
-        Console.WriteLine("Failed to retrieve the fact (the response was empty).");
-
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"An error occurred: {ex.Message}");
-    return 1;
-}
-
-return 0;
-
-
+return result.IsSuccess ? 0 : 1;
