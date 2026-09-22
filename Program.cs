@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using CatFactsApp.Configuration;
 using CatFactsApp.Services;
 
@@ -18,13 +19,21 @@ var host = Host.CreateDefaultBuilder(args)
     {
         var configuration = context.Configuration;
 
-        services.Configure<AppOptions>(configuration.GetSection("AppOptions"));
+        services.AddOptions<AppOptions>()
+            .Bind(configuration.GetSection("AppOptions"))
+            .ValidateDataAnnotations()
+            .Validate(options =>
+            {
+                if (string.IsNullOrWhiteSpace(options.ApiUrl)) return true;
 
-        var apiUrl = configuration["AppOptions:ApiUrl"] ?? "https://catfact.ninja/fact";
+                return Uri.TryCreate(options.ApiUrl, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
+            }, "ApiUrl must be an absolute HTTPS URL.")
+            .ValidateOnStart();
 
-        services.AddHttpClient<ICatFactClient, CatFactClient>(client =>
+        services.AddHttpClient<ICatFactClient, CatFactClient>((provider, client) =>
         {
-            client.BaseAddress = new Uri(apiUrl);
+            var options = provider.GetRequiredService<IOptions<AppOptions>>().Value;
+            client.BaseAddress = new Uri(options.ApiUrl);
         })
         .AddStandardResilienceHandler(options =>
         {
@@ -34,7 +43,6 @@ var host = Host.CreateDefaultBuilder(args)
 
         services.AddTransient<IFileService, FileService>();
         services.AddTransient<ICatFactApplicationService, CatFactApplicationService>();
-
         services.AddTransient<IFactStatisticsService, FactStatisticsService>();
     })
     .Build();
@@ -52,7 +60,7 @@ if (args.Contains("--stats"))
     Console.WriteLine($"Shortest fact: {stats.ShortestFactLength}");
     Console.WriteLine($"Longest fact: {stats.LongestFactLength}");
 
-    return 0; 
+    return 0;
 }
 
 var appService = provider.GetRequiredService<ICatFactApplicationService>();
