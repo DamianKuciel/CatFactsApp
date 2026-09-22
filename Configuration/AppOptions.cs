@@ -1,8 +1,13 @@
-﻿namespace CatFactsApp.Configuration
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CatFactsApp.Configuration
 {
-    public class AppOptions
+    public sealed class AppOptions
     {
-        public string ApiUrl { get; set; } = string.Empty;
-        public string OutputFilePath { get; set; } = string.Empty;
+        [Required(ErrorMessage = "ApiUrl is required.")]
+        public string ApiUrl { get; init; } = string.Empty;
+
+        [Required(ErrorMessage = "OutputFilePath is required.")]
+        public string OutputFilePath { get; init; } = string.Empty;
     }
 }
